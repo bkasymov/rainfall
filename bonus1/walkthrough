@@ -1,0 +1,58 @@
+We are see that function receive two arguments
+First argument checking with atoi and if it's
+less than 10 it's coping this argument by size
+of second argument.
+After it checking if number is 1464814662 - 
+going to /bin/sh
+Therefore we use offset of memcpy to overwrite
+and than to take number equal 1464814662
+
+How we see, first arg is length, second arg itself
+With length in if condition checking that length
+is now longer than 10.
+
+void *memcpy(void *dst, const void *src, size_t n);
+
+First argument here is size which multiply to 4.
+Than to put length more than < 10, we could use
+numbers with minus.
+When negative number multiply to 4, it will be positive
+because size_t is unsigned integer type 
+https://stackoverflow.com/questions/2550774/what-is-size-t-in-c
+And if we find negative number which have size 11
+we could to overflow the buffer by 4 bytes
+and it will let us write own number to comparation.
+
+How to find right negative number, than to find
+11, because it will multiply to 4 = 44 and it will
+be overflow?
+
+We decide to find number via:
+"printf("%u\n", (size_t)(atoi(((INT_MIN + 1)* 4)):
+will print: 4
++ 2 = 4
++ 3 = 12
+...
++ 11 = 44
+-2 147 483 648 - 11 = -2147483637
+"printf("%u\n", (size_t)(atoi((INT_MIN * 4)):
+
+Therefore look at this steps:
+1. We put first argument -2147483637 because:
+a) it's less than 10
+b) memcpy take size of this number and multiply
+to 4 and buffer will be 44, it's overflow of 4 bytes.
+
+2. second argument will be python script
+which fill with litterals all cells
+$(python -c "print 'x'*40)
+
+3. + 1464814662 <-- plus number of comparation
+like hex '\x46\x4c\x4f\x57' to record this number
+to variable iStack20 to compare.
+
+in conclude:
+./bonus1 -2147483637 $(python -c "print 'x'*40 + '\x46\x4c\x4f\x57'")
+
+$ cat /home/user/bonus2/.pass
+579bd19263eb8655e4cf7b742d75edf8c38226925d78db8163506f5191825245

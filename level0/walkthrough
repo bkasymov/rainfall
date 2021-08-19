@@ -1,0 +1,23 @@
+1. See files:
+	ls
+We binary file level0
+2. Try to use it: 
+	./level0
+Seg fault
+	./level0 1
+No!
+3. Open and analyze with gdb:
+	gdb level0 42
+	(gdb)disas main
+....
+   0x08048ed4 <+20>:	call   0x8049710 <atoi>
+   0x08048ed9 <+25>:	cmp    $0x1a7,%eax
+.....
+It means atop use $0x1a7, what is 423 in hex.
+4. Use binary with 423:
+	./level0 423
+	whoami
+	cd /home/user/level1
+	cat .pass
+5.And we have flag to level1:
+	1fe8a524fa4bec01ca4ea2a869af2a02260d4a7d5fe7e7c24d8617e6dca12d3a
